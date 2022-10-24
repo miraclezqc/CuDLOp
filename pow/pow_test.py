@@ -32,9 +32,6 @@ def verify(device):
     my_pow = pow().to(device)
 
     # correctness
-    # It is a counter-example that myLinear does not guarantee correctness.
-    # But you should guarantee yours:)
-        
     in_t = torch.rand(num_rows).to(device)
     out_my = my_pow(in_t, exp).detach()
     out_torch =  torch.pow(in_t, exp).detach()

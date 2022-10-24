@@ -31,9 +31,6 @@ def verify(device):
     my_sign = sign().to(device)
 
     # correctness
-    # It is a counter-example that myLinear does not guarantee correctness.
-    # But you should guarantee yours:)
-        
     in_t = torch.rand(num_rows).to(device)
     out_my = my_sign(in_t).detach()
     out_torch =  torch.sign(in_t).detach()

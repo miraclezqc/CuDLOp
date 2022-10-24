@@ -41,9 +41,6 @@ def verify(device):
     my_stack = stack().to(device)
 
     # correctness
-    # It is a counter-example that myLinear does not guarantee correctness.
-    # But you should guarantee yours:)
-        
     in_t = torch.rand(shape).to(device)
     in_t1 = torch.rand(shape).to(device)
     out_torch =  torch.stack((in_t,in_t1), dim=dim).detach()

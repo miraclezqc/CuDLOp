@@ -5,36 +5,45 @@ import torch
 import torch.nn as nn
 import numpy as np
 import time
-import pow_cuda
+import mul_cuda
 
-class powFunction(torch.autograd.Function):
+class mulFunction(torch.autograd.Function):
     # Note that both forward and backward are @staticmethods
     @staticmethod
-    def forward(ctx, input, exp):
-        ctx.save_for_backward(input, exp)
-        output = pow_cuda.forward(input, exp)
+    def forward(ctx, input1, input2):
+        ctx.save_for_backward(input1, input2)
+        output = mul_cuda.forward(input1, input2)
 
         return output[0]
         
 
-class pow(nn.Module):
+class mul(nn.Module):
     def __init__(self):
-        super(pow, self).__init__()
+        super(mul, self).__init__()
     
-    def forward(self, input, exp):
-        return powFunction.apply(input, exp)
+    def forward(self, input1, input2):
+        return mulFunction.apply(input1, input2)
 
 def verify(device):    
-    test_cnt = 100
+    test_cnt = 20
     num_rows = 10000000
-    exp = 2.3
+    scalar = [2.3]
 
-    my_pow = pow().to(device)
+    my_mul = mul().to(device)
 
     # correctness
     in_t = torch.rand(num_rows).to(device)
-    out_my = my_pow(in_t, exp).detach()
-    out_torch =  torch.pow(in_t, exp).detach()
+    other_t = torch.rand(num_rows).to(device)
+    other_scalar =  torch.from_numpy(np.array(scalar, dtype="float32")).to(device)
+
+    # shape(in_t) = shape(other_t) 
+    out_my = my_mul(in_t, other_t).detach()
+    out_torch =  torch.mul(in_t, other_t).detach()
+    np.testing.assert_allclose(out_my.cpu().numpy(), out_torch.cpu().numpy(), 1e-6)
+
+    # shape(other_t) = [1]
+    out_my = my_mul(in_t, other_scalar).detach()
+    out_torch =  torch.mul(in_t, other_scalar).detach()
     np.testing.assert_allclose(out_my.cpu().numpy(), out_torch.cpu().numpy(), 1e-6)
 
     # time
@@ -43,19 +52,20 @@ def verify(device):
     
     for _ in range(test_cnt+10):
         in_t = torch.rand(num_rows).to(device)
+        other_t = torch.rand(num_rows).to(device)
         start_time = time.time()
-        out_my = my_pow(in_t, exp)
+        out_my = my_mul(in_t, other_t)
         torch.cuda.synchronize(device)
         end_time = time.time()
         my_time.append(end_time-start_time)
         
         start_time = time.time()
-        out_torch = my_pow(in_t, exp)
+        out_torch = my_mul(in_t, other_t)
         torch.cuda.synchronize(device)
         end_time = time.time()
         torch_time.append(end_time-start_time)
-    print(f'My pow avg time: {sum(my_time[10:])/test_cnt}s')
-    print(f'PyTorch pow avg time: {sum(torch_time[10:])/test_cnt}s')
+    print(f'My mul avg time: {sum(my_time[10:])/test_cnt}s')
+    print(f'PyTorch mul avg time: {sum(torch_time[10:])/test_cnt}s')
 
 def main():
     # Training settings

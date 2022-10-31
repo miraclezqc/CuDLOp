@@ -42,21 +42,19 @@ def verify(device):
     
     for _ in range(test_cnt+10):
         in_t = torch.rand(num_rows).to(device)
-        # my laeyrnrom
         start_time = time.time()
         out_my = my_sign(in_t)
         torch.cuda.synchronize(device)
         end_time = time.time()
         my_time.append(end_time-start_time)
         
-        # torch linear
         start_time = time.time()
         out_torch = my_sign(in_t)
         torch.cuda.synchronize(device)
         end_time = time.time()
         torch_time.append(end_time-start_time)
-    print(f'My Linear avg time: {sum(my_time[10:])/test_cnt}s')
-    print(f'PyTorch Linear avg time: {sum(torch_time[10:])/test_cnt}s')
+    print(f'My sign avg time: {sum(my_time[10:])/test_cnt}s')
+    print(f'PyTorch sign avg time: {sum(torch_time[10:])/test_cnt}s')
 
 def main():
     # Training settings

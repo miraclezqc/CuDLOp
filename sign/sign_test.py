@@ -1,4 +1,3 @@
-# This file has been changed for education and teaching purpose
 
 import argparse
 import torch

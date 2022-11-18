@@ -33,7 +33,7 @@ def verify(device):
     in_t = torch.rand(num_rows).to(device)
     out_my = my_erf(in_t).detach()
     out_torch =  torch.erf(in_t).detach()
-    np.testing.assert_allclose(out_my.cpu().numpy(), out_torch.cpu().numpy(), 5e-4)
+    np.testing.assert_allclose(out_my.cpu().numpy(), out_torch.cpu().numpy(), 1e-3)
     
 
 

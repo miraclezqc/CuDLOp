@@ -51,6 +51,24 @@ __global__ void  kernel0(const scalar_t* input, scalar_t* output, const int elem
         }
 }
 
+template <typename scalar_t>
+__global__ void  kernel1(const scalar_t* input, scalar_t* output, const int elements) {
+    if (((int)threadIdx.x < (min(((-NUM_BLOCK * (int)blockIdx.x) + (elements-1)), NUM_BLOCK) + 1))) {
+      float x2;
+      float ax2;
+      float b;
+      if ((input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] >= 0)) {
+        b = 1;
+      }
+      else {
+        b = -1;
+      }
+      x2 = (input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] * input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)]);
+      ax2 = (x2 * 0.147);
+      output[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] = (b * runtime_sqrt((1 - runtime_exp((((0 - x2) * (1.273239544735 + ax2)) / (1 + ax2))))));
+    }
+}
+
 std::vector<torch::Tensor> erf_cuda_forward(
     torch::Tensor input)
 {
@@ -63,7 +81,7 @@ std::vector<torch::Tensor> erf_cuda_forward(
     const dim3 grid((num_rows - 1) / NUM_BLOCK + 1, 1, 1);
 
     AT_DISPATCH_FLOATING_TYPES(input.type(), "erf_cuda_forward", ([&] {
-        kernel0<scalar_t><<<grid, block>>>(
+        kernel1<scalar_t><<<grid, block>>>(
             input.data<scalar_t>(),
             output.data<scalar_t>(),
             num_rows);

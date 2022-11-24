@@ -54,9 +54,9 @@ __global__ void  kernel0(const scalar_t* input, scalar_t* output, const int elem
 template <typename scalar_t>
 __global__ void  kernel1(const scalar_t* input, scalar_t* output, const int elements) {
     if (((int)threadIdx.x < (min(((-NUM_BLOCK * (int)blockIdx.x) + (elements-1)), NUM_BLOCK) + 1))) {
-      float x2;
-      float ax2;
-      float b;
+      double x2;
+      double ax2;
+      double b;
       if ((input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] >= 0)) {
         b = 1;
       }
@@ -65,7 +65,31 @@ __global__ void  kernel1(const scalar_t* input, scalar_t* output, const int elem
       }
       x2 = (input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] * input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)]);
       ax2 = (x2 * 0.147);
-      output[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] = (b * runtime_sqrt((1 - runtime_exp((((0 - x2) * (1.273239544735 + ax2)) / (1 + ax2))))));
+      output[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] = (b * runtime_sqrt((1 - runtime_exp((((0 - x2) * (1.2732395447351626861510701069801 + ax2)) / (1 + ax2))))));
+    }
+}
+
+template <typename scalar_t>
+__global__ void  kernel2(const scalar_t* input, scalar_t* output, const int elements) {
+    if (((int)threadIdx.x < (min(((-NUM_BLOCK * (int)blockIdx.x) + (elements-1)), NUM_BLOCK) + 1))) {
+      double  a1 =  0.254829592;
+      double  a2 = -0.284496736;
+      double  a3 =  1.421413741;
+      double  a4 = -1.453152027;
+      double  a5 =  1.061405429;
+      double  p  =  0.3275911;
+      int b;
+
+      if ((input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] >= 0)) {
+        b = 1;
+      }
+      else {
+        b = -1;
+      }
+      double x = abs(double(input[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)]));
+      double t = 1.0 / (1.0 + p * x);
+      output[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] =  (1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x));
+      output[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)] =  b * output[(((int)blockIdx.x * NUM_BLOCK) + (int)threadIdx.x)];
     }
 }
 
@@ -81,7 +105,7 @@ std::vector<torch::Tensor> erf_cuda_forward(
     const dim3 grid((num_rows - 1) / NUM_BLOCK + 1, 1, 1);
 
     AT_DISPATCH_FLOATING_TYPES(input.type(), "erf_cuda_forward", ([&] {
-        kernel1<scalar_t><<<grid, block>>>(
+        kernel2<scalar_t><<<grid, block>>>(
             input.data<scalar_t>(),
             output.data<scalar_t>(),
             num_rows);

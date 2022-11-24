@@ -31,9 +31,17 @@ def verify(device):
 
     # correctness
     in_t = torch.rand(num_rows).to(device)
+    
+    # out_np = new_erf(in_t.cpu().numpy())
+    
     out_my = my_erf(in_t).detach()
     out_torch =  torch.erf(in_t).detach()
-    np.testing.assert_allclose(out_my.cpu().numpy(), out_torch.cpu().numpy(), 1e-3)
+    # np.testing.assert_allclose(out_np, out_torch.cpu().numpy(), 1e-4)
+    np.testing.assert_allclose(out_my.cpu().numpy(), out_torch.cpu().numpy(), 1e-4)
+    exit(1)
+    in_t = in_t.cpu()
+    out_torch_cpu =  torch.erf(in_t)
+    np.testing.assert_allclose(out_torch.cpu().numpy(), out_torch_cpu, 1e-6)
     
 
 
@@ -45,6 +53,7 @@ def main():
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
+    # device = torch.device("cpu")
 
     verify(device)
 

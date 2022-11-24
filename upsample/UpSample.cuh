@@ -171,7 +171,7 @@ __device__ __forceinline__ static scalar_t upsample_get_value_bounded(
     int offset) {
   int access_y = max(min(y, height - 1), 0);
   int access_x = max(min(x, width - 1), 0);
-  return data[offset+ access_y*width+access_x];
+  return data[offset + access_y*width+access_x];
 }
 
 /* Used by UpSampleBicubic2d.cu */

@@ -8,10 +8,10 @@ import upsample_cuda
 
 
 def verify(device):    
-    num_rows = 10
-    num_cols = 10
+    num_rows = 200
+    num_cols = 200
     # correctness
-    in_t = torch.rand((1,1,num_rows, num_cols)).to(device)
+    in_t = torch.rand((20,20,num_rows, num_cols)).to(device)
     out_my = upsample_cuda.forward(input = in_t, scale_factor=[2,2],mode="bicubic",align_corners=False, recompute_scale_factor = True)
     out_torch =  nn.Upsample(scale_factor=2, mode='bicubic',align_corners=False, recompute_scale_factor = True)(in_t)
     np.testing.assert_allclose(out_my.cpu().numpy(), out_torch.cpu().numpy(), 1e-3)

@@ -7,6 +7,8 @@ setup(
         CUDAExtension('upsample_cuda', [
             'upsample_cuda.cpp',
             'upsample_bicubic_kernel.cu',
+            'upsample_trilinear_kernel.cu',
+            # 'UpSample.cuh',
         ])
     ],
     cmdclass={

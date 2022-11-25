@@ -29,8 +29,6 @@ inline std::vector<int64_t> compute_output_size(
 
     std::tie(input, size, scale_factor, recompute_scale_factor) =
       closed_over_args;
-
-
     
     if (!size.empty()) {
         return size;
@@ -57,7 +55,7 @@ inline std::vector<int64_t> compute_output_size(
   }
 
   std::vector<int64_t> ret;
-  for (const auto i : c10::irange(dim)) {
+  for (int i; i<dim; i++) {
     ret.emplace_back(static_cast<int64_t>(
         floor(static_cast<double>(input.size(i + 2)) * scale_factors[i])));
   }
@@ -108,6 +106,29 @@ torch::Tensor upsample_cuda_bicubic2d(
     return output;
 }
 
+void upsample_trilinear3d_out_cuda_template(
+    torch::Tensor& output,
+    const torch::Tensor& input,
+    std::vector<int64_t> output_size,
+    bool align_corners,
+    float scales_d,
+    float scales_h,
+    float scales_w);
+    
+torch::Tensor upsample_cuda_trilinear3d(
+    const torch::Tensor& input,
+    std::vector<int64_t> output_size,
+    bool align_corners,
+    double scale_d,
+    double scale_h,
+    double scale_w) {
+    // Initialize output
+    // may cause problem, should force output to be on the same device as input
+    torch::Tensor output = torch::zeros({input.size(0), input.size(1), output_size[0], output_size[1], output_size[2]}, torch::TensorOptions().device(torch::kCUDA));
+    upsample_trilinear3d_out_cuda_template(output, input,output_size, align_corners, scale_d, scale_h, scale_w);
+    return output;
+}
+
 
 
 inline torch::Tensor interpolate(
@@ -119,12 +140,8 @@ inline torch::Tensor interpolate(
     bool recompute_scale_factor = false) {
     
     // need to check mode
-
     auto scale_factor_len = input.dim() - 2;
-    
-    
-    
-    
+
     // argument check
     if (size.empty() && scale_factor.empty()) {
         TORCH_CHECK(false, "either size or scale_factor should be defined");
@@ -176,6 +193,16 @@ inline torch::Tensor interpolate(
             align_corners,
             scale_factor_list.at(0),
             scale_factor_list.at(1)
+        );
+    }
+    else if (input.dim() == 5 && mode == "trilinear"){
+        return upsample_cuda_trilinear3d(
+            input,
+            output_size,
+            align_corners,
+            scale_factor_list.at(0),
+            scale_factor_list.at(1),
+            scale_factor_list.at(2)
         );
     }
 

@@ -6,8 +6,6 @@
 #include <math.h>
 
 
-
-
 /* TODO: move this to a common place */
 template <typename scalar_t>
 __device__ inline scalar_t min(scalar_t a, scalar_t b) {

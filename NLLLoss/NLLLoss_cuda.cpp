@@ -26,9 +26,9 @@
 #include <vector>
 
 // CUDA funciton declearition
-void nll_loss_forward_out_cuda_template(
-    const torch::Tensor& output,
-    const torch::Tensor& total_weight,
+void nll_loss_forward_out_cuda(
+    torch::Tensor& output,
+    torch::Tensor& total_weight,
     const torch::Tensor& input_,
     const torch::Tensor& target_,
     const torch::Tensor& weight,
@@ -80,23 +80,31 @@ torch::Tensor NLLLoss_forward(
         " but got weight tensor of shape: ",
         weight.sizes());
 
+    TORCH_CHECK(reduction=="mean" || reduction=="none" || reduction=="sum",
+            "Please specify the reduction to apply to the output: 'none' | 'mean' | 'sum'");
+
     const auto n_dims = input.dim();
     const auto batch_size = input.size(0);
-    printf("reduce %d, n_dims %d \n", reduce, n_dims);
-    if (reduce == false && n_dims == 2) {
+
+    torch::Tensor total_weight = torch::zeros({input.size(-1)}, torch::TensorOptions().device(torch::kCUDA));
+    if (n_dims == 1){
+        torch::Tensor output = torch::zeros({1}, torch::TensorOptions().device(torch::kCUDA));
+        nll_loss_forward_out_cuda(
+            output, total_weight, input, target, weight, reduction, ignore_index);
+         return output;
+    }
+    if (reduction == "none" && n_dims == 2) {
         torch::Tensor output = torch::zeros({input.size(0)}, torch::TensorOptions().device(torch::kCUDA));
-        torch::Tensor total_weight = torch::zeros({input.size(-1)}, torch::TensorOptions().device(torch::kCUDA));
-
-        printf("Entering nll_loss_forward_out_cuda_template \n");
-
-        nll_loss_forward_out_cuda_template(
-      output, total_weight, input, target, weight, reduction, ignore_index);
-
-        printf("Exit nll_loss_forward_out_cuda_template \n");
+        nll_loss_forward_out_cuda(
+            output, total_weight, input, target, weight, reduction, ignore_index);
         return output;
     }
-    // elif(reduce == false && n_dims == 1)
-
+    else if (n_dims == 2){
+        torch::Tensor output = torch::zeros({1}, torch::TensorOptions().device(torch::kCUDA));
+        nll_loss_forward_out_cuda(
+            output, total_weight, input, target, weight, reduction, ignore_index);
+        return output;
+    }
 }
 
 

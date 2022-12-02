@@ -1,6 +1,6 @@
 import torch
 from typing import Callable, List, Optional, Tuple, Union
-import NLLLoss_cuda
+import NLLLoss
 Tensor = torch.Tensor
 def nll_loss(
     input: Tensor,
@@ -42,4 +42,4 @@ def nll_loss(
     """
     if weight == None:
         weight = torch.ones(input.size(-1), device = input.device)
-    return NLLLoss_cuda.forward(input, target, weight, size_average, ignore_index, reduce, reduction)
+    return NLLLoss.forward(input, target, weight, size_average, ignore_index, reduce, reduction)
